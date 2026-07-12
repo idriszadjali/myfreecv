@@ -221,6 +221,8 @@
   .cv-item .dates{font-size:11px;color:#6a6f77;white-space:nowrap;flex:none;font-variant-numeric:tabular-nums}
   .cv-item .org{font-size:12px;color:#2f4b86;font-weight:600;margin-top:2px}
   .cv-item .org .oloc{color:#71767e;font-weight:500}
+  .cv-item .org .oloc::before{content:"|";margin:0 7px;color:#c2c2c2}
+  .cv-item .org .olink{color:#71767e;font-weight:500}
   .cv-item ul{margin:6px 0 0;padding-left:17px}
   .cv-item li{font-size:11.8px;color:#33373d;margin-bottom:3px;line-height:1.5}
   .cv-item .details{font-size:11.8px;color:#33373d;margin-top:3px;line-height:1.5}
@@ -988,7 +990,7 @@
     var h = sectionOpen("Experience");
     items.forEach(function(it){
       h += '<div class="cv-item"><div class="line1"><span class="role">'+esc(it.role||"")+'</span>'+(it.dates.trim()?'<span class="dates">'+esc(it.dates)+'</span>':'')+'</div>';
-      if(it.org.trim()||it.loc.trim()) h += '<div class="org">'+esc(it.org)+(it.loc.trim()?' <span class="oloc">· '+esc(it.loc)+'</span>':'')+'</div>';
+      if(it.org.trim()||it.loc.trim()) h += '<div class="org">'+esc(it.org)+(it.loc.trim()?'<span class="oloc">'+esc(it.loc)+'</span>':'')+'</div>';
       var bl = bulletLines(it.bullets); if(bl.length) h += '<ul>'+bl.map(function(b){return '<li>'+esc(b)+'</li>';}).join("")+'</ul>';
       h += '</div>';
     });
@@ -999,7 +1001,7 @@
     var h = sectionOpen("Education");
     items.forEach(function(it){
       h += '<div class="cv-item"><div class="line1"><span class="role">'+esc(it.degree||"")+'</span>'+(it.dates.trim()?'<span class="dates">'+esc(it.dates)+'</span>':'')+'</div>';
-      if(it.school.trim()||it.loc.trim()) h += '<div class="org">'+esc(it.school)+(it.loc.trim()?' <span class="oloc">· '+esc(it.loc)+'</span>':'')+'</div>';
+      if(it.school.trim()||it.loc.trim()) h += '<div class="org">'+esc(it.school)+(it.loc.trim()?'<span class="oloc">'+esc(it.loc)+'</span>':'')+'</div>';
       if(it.details.trim()) h += '<div class="details">'+esc(it.details)+'</div>';
       h += '</div>';
     });
@@ -1010,7 +1012,7 @@
     var h = sectionOpen("Projects");
     items.forEach(function(it){
       h += '<div class="cv-item"><div class="line1"><span class="role">'+esc(it.name||"")+'</span>'+(it.dates.trim()?'<span class="dates">'+esc(it.dates)+'</span>':'')+'</div>';
-      if(it.link.trim()) h += '<div class="org"><span class="oloc">'+esc(it.link)+'</span></div>';
+      if(it.link.trim()) h += '<div class="org"><span class="olink">'+esc(it.link)+'</span></div>';
       var bl = bulletLines(it.bullets); if(bl.length) h += '<ul>'+bl.map(function(b){return '<li>'+esc(b)+'</li>';}).join("")+'</ul>';
       h += '</div>';
     });
@@ -1092,7 +1094,7 @@
     if(state.headline.trim()){ para(state.headline, M, 11.5, "normal", [51,51,68], 15, headW); y+=1; }
     var citems = contactItems();
     if(citems.length){
-      var csize=9.5, clineH=13, csep="   •   ";
+      var csize=9.5, clineH=13, csep="   ·   ";
       setFont("normal", csize, MUTE);
       var csepW = doc.getTextWidth(csep), clx = M;
       need(clineH);
@@ -1100,10 +1102,11 @@
         var cit = citems[ci];
         setFont("normal", csize, MUTE);
         var cw = doc.getTextWidth(cit.text);
-        if(clx > M && (clx - M) + cw > headW){ y += clineH; need(clineH); clx = M; }
+        var sepW = (clx > M) ? csepW : 0;
+        if(sepW && (clx - M) + sepW + cw > headW){ y += clineH; need(clineH); clx = M; sepW = 0; }
+        if(sepW){ doc.text(csep, clx, y); clx += sepW; }
         if(cit.url){ doc.textWithLink(cit.text, clx, y, {url:cit.url}); } else { doc.text(cit.text, clx, y); }
         clx += cw;
-        if(ci < citems.length-1){ setFont("normal", csize, MUTE); doc.text(csep, clx, y); clx += csepW; }
       }
       y += clineH;
     }
@@ -1159,7 +1162,7 @@
         sectionHeading("Experience");
         items.forEach(function(it, idx){
           titleDates(it.role.trim(), it.dates.trim(), 10.5);
-          var org = it.org.trim() + (it.loc.trim()? "  ·  "+it.loc.trim() : "");
+          var org = it.org.trim() + (it.loc.trim()? "   |   "+it.loc.trim() : "");
           subLine(org, ACC);
           var bl = bulletLines(it.bullets); if(bl.length){ y+=1; bullets(bl); }
           if(idx<items.length-1) y += 6;
@@ -1170,7 +1173,7 @@
         sectionHeading("Education");
         items.forEach(function(it, idx){
           titleDates(it.degree.trim(), it.dates.trim(), 10.5);
-          var sch = it.school.trim() + (it.loc.trim()? "  ·  "+it.loc.trim() : "");
+          var sch = it.school.trim() + (it.loc.trim()? "   |   "+it.loc.trim() : "");
           subLine(sch, ACC);
           if(it.details.trim()){ para(it.details, M, 9.5, "normal", [43,43,43], 12.5, CW); }
           if(idx<items.length-1) y += 6;
@@ -1209,7 +1212,7 @@
         var items = state.languages.filter(hasLang); if(!items.length) return;
         sectionHeading("Languages");
         var parts = items.map(function(l){ return l.name.trim() + (l.level ? " ("+l.level+")" : ""); });
-        para(parts.join("   •   "), M, 10, "normal", [43,43,43], 14, CW);
+        para(parts.join("   ·   "), M, 10, "normal", [43,43,43], 14, CW);
       }
     };
     state.sectionOrder.forEach(function(key){ if(PDF[key]) PDF[key](); });
@@ -1266,6 +1269,7 @@
   document.addEventListener("keydown", function(e){ if(e.key==="Escape" && !nudgeOverlay.hidden) closeNudge(); });
 
   function clearAll(){
+    if(!confirm("Clear all fields? This erases everything you've entered and can't be undone.")) return;
     state = defaultState();
     renderForm(); renderPreview(); setStatus("");
   }
