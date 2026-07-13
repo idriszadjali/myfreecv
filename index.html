@@ -205,7 +205,7 @@
   .cv-head .cv-photo{width:92px;height:92px;border-radius:6px;object-fit:cover;flex:none;border:1px solid #e2e2e2}
   .cv-name{font-size:28px;font-weight:700;letter-spacing:-.4px;margin:0;color:#141414;line-height:1.1}
   .cv-headline{font-size:14px;color:#4a4f57;margin:5px 0 0;font-weight:500}
-  .cv-contact{font-size:11.5px;color:#5a5f66;margin-top:9px;line-height:1.7}
+  .cv-contact{font-size:11.5px;color:#5a5f66;margin-top:9px;line-height:1.7;overflow-wrap:anywhere}
   .cv-contact span:not(:last-child)::after{content:"  ·  ";color:#c2c2c2}
 
   .cv-sec{margin-top:22px}
@@ -958,17 +958,19 @@
   function contactParts(){
     var out=[];
     ["email","phone","linkedin","location","nationality"].forEach(function(k){
-      var v = (k==="phone") ? fullPhone() : state[k];
+      var v = (k==="phone") ? fullPhone() : (k==="linkedin" ? prettyUrl(state[k]) : state[k]);
       if(v && v.trim()) out.push(v.trim());
     });
     return out;
   }
   function normUrl(u){ u=String(u).trim(); return /^https?:\/\//i.test(u) ? u : "https://"+u.replace(/^\/+/,""); }
+  // Tidy label for display: drop protocol, www, and any query string / hash so long share links don't blow out the line.
+  function prettyUrl(u){ return String(u||"").trim().replace(/^https?:\/\//i,"").replace(/^www\./i,"").replace(/[?#].*$/,"").replace(/\/+$/,""); }
   function contactItems(){
     var out=[];
     if(state.email && state.email.trim()){ var e=state.email.trim(); out.push({text:e, url:"mailto:"+e}); }
     var ph=fullPhone(); if(ph){ out.push({text:ph, url:"tel:"+ph.replace(/[^\d+]/g,"")}); }
-    if(state.linkedin && state.linkedin.trim()){ var l=state.linkedin.trim(); out.push({text:l, url:normUrl(l)}); }
+    if(state.linkedin && state.linkedin.trim()){ var l=state.linkedin.trim(); out.push({text:prettyUrl(l), url:normUrl(l)}); }
     if(state.location && state.location.trim()) out.push({text:state.location.trim(), url:null});
     if(state.nationality && state.nationality.trim()) out.push({text:state.nationality.trim(), url:null});
     return out;
